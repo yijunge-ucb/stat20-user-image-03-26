@@ -1,0 +1,2 @@
+fonts-symbola
+texlive-fonts-extra
