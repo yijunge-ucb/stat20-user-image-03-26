@@ -425,7 +425,7 @@ packages = list(
   "tidycensus" = "1.7.1",
   "unvotes" = "0.3.0",
   "xaringanthemer" = "0.4.3",
-  "MatchIt" = "4.7.2",
+  "MatchIt" = "4.7.2"
 )
 
 install_packages_with_versions(packages)
