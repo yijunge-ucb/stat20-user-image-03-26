@@ -48,7 +48,7 @@ USER ${NB_USER}
 
 COPY extensions/ /tmp/extensions/
 
-RUN set -euo pipefail; \
+RUN set -eu; \
     CS="${CONDA_DIR}/bin/code-server"; \
     EXT_DIR="${VSCODE_EXTENSIONS}"; \
     \
