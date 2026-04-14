@@ -38,25 +38,6 @@ COPY --chown=${NB_USER}:${NB_USER} environment.yml /tmp/environment.yml
 RUN mamba env update -n notebook -f /tmp/environment.yml && \
     mamba clean -afy && rm -rf /tmp/environment.yml
 
-# Prepare VS Code extensions
-USER root
-ENV VSCODE_EXTENSIONS=${CONDA_DIR}/share/code-server/extensions
-RUN install -d -o ${NB_USER} -g ${NB_USER} ${VSCODE_EXTENSIONS} && \
-    chown ${NB_USER}:${NB_USER} ${CONDA_DIR}/share/code-server
-
-USER ${NB_USER}
-
-COPY extensions/ /tmp/extensions/
-
-RUN set -eu; \
-    CS="${CONDA_DIR}/bin/code-server"; \
-    EXT_DIR="${VSCODE_EXTENSIONS}"; \
-    \
-    $CS --extensions-dir "$EXT_DIR" --install-extension /tmp/extensions/ms-toolsai.jupyter.vsix; \
-    $CS --extensions-dir "$EXT_DIR" --install-extension /tmp/extensions/ms-python.python.vsix; \
-    $CS --extensions-dir "$EXT_DIR" --install-extension /tmp/extensions/quarto.quarto.vsix; \
-    \
-    rm -rf /tmp/extensions
 
 USER root
 RUN rm -rf /tmp/*
@@ -72,7 +53,22 @@ RUN r /tmp/install.R
 
 COPY file-locks /etc/rstudio/file-locks
 
+# Prepare VS Code extensions
+USER root
+ENV VSCODE_EXTENSIONS=${CONDA_DIR}/share/code-server/extensions
+RUN install -d -o ${NB_USER} -g ${NB_USER} ${VSCODE_EXTENSIONS} && \
+    chown ${NB_USER}:${NB_USER} ${CONDA_DIR}/share/code-server
+
+USER ${NB_USER}
+
+# Install Code Server Jupyter extension
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-toolsai.jupyter
+# Install Code Server Python extension
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-python.python
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension quarto.quarto
+
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+
 
 EXPOSE 8888
 ENTRYPOINT ["tini", "--"]
