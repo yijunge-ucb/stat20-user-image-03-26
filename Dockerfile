@@ -13,6 +13,19 @@ RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends $(grep -v '^#' /tmp/apt.txt) && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/apt.txt
 
+ENV SHINY_SERVER_URL=https://download3.rstudio.org/ubuntu-20.04/x86_64/shiny-server-1.5.23.1030-amd64.deb
+RUN curl --silent --location --fail ${SHINY_SERVER_URL} > /tmp/shiny-server.deb && \
+    apt install --no-install-recommends --yes /tmp/shiny-server.deb && \
+    rm /tmp/shiny-server.deb
+
+# google-chrome is for pagedown; chromium doesn't work nicely with it (snap?)
+RUN wget --quiet -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    apt-get update > /dev/null && \
+    apt-get -qq install /tmp/chrome.deb > /dev/null && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -f /tmp/chrome.deb
+
 # ------------------------------------------------------------
 # Conda / Python packages
 # ------------------------------------------------------------
@@ -25,6 +38,19 @@ COPY --chown=${NB_USER}:${NB_USER} environment.yml /tmp/environment.yml
 RUN mamba env update -n notebook -f /tmp/environment.yml && \
     mamba clean -afy && rm -rf /tmp/environment.yml
 
+# Prepare VS Code extensions
+USER root
+ENV VSCODE_EXTENSIONS=${CONDA_DIR}/share/code-server/extensions
+RUN install -d -o ${NB_USER} -g ${NB_USER} ${VSCODE_EXTENSIONS} && \
+    chown ${NB_USER}:${NB_USER} ${CONDA_DIR}/share/code-server
+
+USER ${NB_USER}
+
+# Install Code Server Jupyter extension
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-toolsai.jupyter
+# Install Code Server Python extension
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-python.python
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension quarto.quarto
 
 USER root
 RUN rm -rf /tmp/*
@@ -37,6 +63,8 @@ WORKDIR /home/${NB_USER}
 
 COPY install.R /tmp/install.R
 RUN r /tmp/install.R
+
+COPY file-locks /etc/rstudio/file-locks
 
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
