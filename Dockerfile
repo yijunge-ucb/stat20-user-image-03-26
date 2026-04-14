@@ -46,11 +46,17 @@ RUN install -d -o ${NB_USER} -g ${NB_USER} ${VSCODE_EXTENSIONS} && \
 
 USER ${NB_USER}
 
-# Install Code Server Jupyter extension
-RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-toolsai.jupyter
-# Install Code Server Python extension
-RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-python.python
-RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension quarto.quarto
+COPY extensions/ /tmp/extensions/
+
+RUN set -euo pipefail; \
+    CS="${CONDA_DIR}/bin/code-server"; \
+    EXT_DIR="${VSCODE_EXTENSIONS}"; \
+    \
+    $CS --extensions-dir "$EXT_DIR" --install-extension /tmp/extensions/ms-toolsai.jupyter.vsix; \
+    $CS --extensions-dir "$EXT_DIR" --install-extension /tmp/extensions/ms-python.python.vsix; \
+    $CS --extensions-dir "$EXT_DIR" --install-extension /tmp/extensions/quarto.quarto.vsix; \
+    \
+    rm -rf /tmp/extensions
 
 USER root
 RUN rm -rf /tmp/*
