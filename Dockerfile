@@ -62,13 +62,11 @@ RUN install -d -o ${NB_USER} -g ${NB_USER} ${VSCODE_EXTENSIONS} && \
 USER ${NB_USER}
 
 # Install Code Server Jupyter extension
-RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-toolsai.jupyter
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-toolsai.jupyter@2025.4.1
 # Install Code Server Python extension
-RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-python.python
-RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension quarto.quarto
-
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension ms-python.python@2026.4.0
+RUN ${CONDA_DIR}/bin/code-server --extensions-dir ${VSCODE_EXTENSIONS} --install-extension quarto.quarto@1.131.0
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
-
 
 EXPOSE 8888
 ENTRYPOINT ["tini", "--"]
